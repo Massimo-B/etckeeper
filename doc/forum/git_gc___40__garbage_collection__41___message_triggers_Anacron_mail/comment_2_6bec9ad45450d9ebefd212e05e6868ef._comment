@@ -1,0 +1,14 @@
+[[!comment format=mdwn
+ username="tst"
+ avatar="http://cdn.libravatar.org/avatar/e14c40a1ce6435dfe858dd9286b8b915"
+ subject="comment 2"
+ date="2024-10-15T09:51:57Z"
+ content="""
+The git-gc man pages say
+
+> When common porcelain operations that create objects are run, they will check whether the repository has grown substantially since the last maintenance, and if so run git gc automatically.
+
+So `git` itself runs `git gc` every time `etckeeper` commits anything, unless `gc.auto` is set to `0` in the config.
+
+This behaviour normaly is helpful, but the additional are mails not. Since they are sent by `anacron`, an easy solution is to disable the cron job. You can use the systemd timer instead, but you have to set up extra monitoring if you still want to know if etckeeper's daily commits fail.
+"""]]
