@@ -2,9 +2,11 @@ Dear etckeeper developers,
 
 Fedora 41 ships with DNF 5, and CentOS Stream and Red Hat Enterprise Linux 11 will ship with DNF 5 as well in 2027/8
 
-Plugins need to be rewritten in C++ to keep working - including for etckeeper:
+Plugins need to be rewritten to keep working - including for etckeeper:
 
 https://dnf5.readthedocs.io/en/stable/tutorial/plugins/index.html
+
+(Python plugins are also now possible, the documentation is out of date; see e.g. https://github.com/rpm-software-management/dnf5/blob/main/libdnf5-plugins/python_plugins_loader/plugin.py)
 
 Until then, etckeeper "works" in Fedora but requires manually committing; the automatic commit per DNF transaction no longer works.
 
