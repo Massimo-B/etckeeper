@@ -1,0 +1,10 @@
+[[!comment format=mdwn
+ username="joey"
+ subject="""comment 1"""
+ date="2024-12-09T18:14:07Z"
+ content="""
+It appears that somehow the README files have had their execute bits set on
+your system. So you should `chmod -x` them. If Ubuntu is somehow shipping
+the README files with the execute bit set, you should file a bug on
+Ubuntu.
+"""]]
