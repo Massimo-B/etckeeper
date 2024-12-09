@@ -1,0 +1,14 @@
+[[!comment format=mdwn
+ username="joey"
+ subject="""comment 1"""
+ date="2024-12-09T18:08:30Z"
+ content="""
+You can edit /etc/etckeeper/pre-commit.d/30store-metadata and find in that
+file where it has `chmod 700`. Do note the comment about why it uses that
+permission.
+
+It seems to me that any backup software that is operating on /etc needs to
+be able to read /etc/shadow, and only root and group shadow can. So unless
+your backup program is running as group shadow with some other user, I
+wonder how it can make sense to need to do this.
+"""]]
