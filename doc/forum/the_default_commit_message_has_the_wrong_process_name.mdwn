@@ -1,0 +1,29 @@
+The default commit title when installing new packages is:
+
+```committing changes in /etc made by "/usr/bin/bash"```
+
+Instead of referencing the proper package manager process (pacman in my case)
+This change fixes it:
+
+```
+--- a/etckeeper/post-install.d/50vcs-commit
++++ b/etckeeper/post-install.d/50vcs-commit
+@@ -4,9 +4,7 @@ set -e
+ pl="/var/cache/etckeeper/packagelist"
+ 
+ # Parent process is etckeeper
+-# (Only procps ps is currently supported, others will fail,
+-# so this may end up empty.)
+-ETCKEEPER_PID=$( ps --no-headers -o ppid "${PPID}" 2>/dev/null | sed 's/^ *//' )
++ETCKEEPER_PID=${PPID}
+ 
+ # Find the parent of etckeeper and get the command line of the process
+ if ! [ -z "${ETCKEEPER_PID}" ]; then
+```
+
+So that the commit title is now proper, eg.:
+
+```committing changes in /etc made by "pacman -S minidlna"```
+
+Will you include this fix?
+Or is it expected that I open a pull request? Not sure how it's done on this site as I'm not familiar with it...
