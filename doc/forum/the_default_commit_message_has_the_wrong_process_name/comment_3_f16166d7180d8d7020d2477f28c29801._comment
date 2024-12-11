@@ -1,0 +1,46 @@
+[[!comment format=mdwn
+ username="Dam9k"
+ avatar="http://cdn.libravatar.org/avatar/fb81b13044aedbf11b3e514bde6cfb1a"
+ subject="comment 3"
+ date="2024-12-11T21:11:08Z"
+ content="""
+Here is what I came up with:
+
+```
+diff --git a/etckeeper/post-install.d/50vcs-commit b/etckeeper/post-install.d/50vcs-commit
+index eba0c39..0ea416c 100755
+--- a/etckeeper/post-install.d/50vcs-commit
++++ b/etckeeper/post-install.d/50vcs-commit
+@@ -3,14 +3,16 @@ set -e
+ 
+ pl=\"/var/cache/etckeeper/packagelist\"
+ 
+-# Parent process is etckeeper
+-# (Only procps ps is currently supported, others will fail,
+-# so this may end up empty.)
+-ETCKEEPER_PID=$( ps --no-headers -o ppid \"${PPID}\" 2>/dev/null | sed 's/^ *//' )
+-
+ # Find the parent of etckeeper and get the command line of the process
+-if ! [ -z \"${ETCKEEPER_PID}\" ]; then
+-       ETCKEEPER_PPID=$( ps --no-headers -o ppid \"${ETCKEEPER_PID}\" | sed 's/^ *//' )
++PSTREE=$(pstree -aAcpsT $$)
++ETCKEEPER_PPID=$(echo \"$PSTREE\" | tac | grep -m 1 $HIGHLEVEL_PACKAGE_MANAGER | cut -d, -f2 | cut -d' ' -f1)
++if [ -z \"${ETCKEEPER_PPID}\" ]; then
++       ETCKEEPER_PID=$( ps --no-headers -o ppid \"${PPID}\" 2>/dev/null | sed 's/^ *//' )
++       if [ -n \"${ETCKEEPER_PID}\" ]; then
++               ETCKEEPER_PPID=$( ps --no-headers -o ppid \"${ETCKEEPER_PID}\" | sed 's/^ *//' )
++       fi
++fi
++if [ -n \"${ETCKEEPER_PPID}\" ]; then
+        ETCKEEPER_PARENT_COMMAND_LINE=$( ps --no-headers -o args \"${ETCKEEPER_PPID}\" )
+ fi
+```
+
+Seems to work for me.
+
+What it does is get the process tree of current process, reverse order, grep for HIGHLEVEL_PACKAGE_MANAGER to get the pid of it.
+If that fails it continues with the old method.
+Then it gets the command line of the found process.
+Not sure if dependency on pstree is something that is a problem or not...
+
+"""]]
