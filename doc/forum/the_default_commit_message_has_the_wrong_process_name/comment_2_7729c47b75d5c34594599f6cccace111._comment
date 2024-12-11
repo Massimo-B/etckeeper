@@ -1,0 +1,20 @@
+[[!comment format=mdwn
+ username="Dam9k"
+ avatar="http://cdn.libravatar.org/avatar/fb81b13044aedbf11b3e514bde6cfb1a"
+ subject="comment 2"
+ date="2024-12-11T20:20:34Z"
+ content="""
+joey, thanks for the feedback, I understand now why it was implemented that way.
+I was using pacman not pacman-g2.
+For reference here is how a process tree looks like with pacman:
+
+```
+ 131379 pts/2    SN     0:00      \_ /usr/bin/bash
+ 131967 pts/2    SN+    0:00          \_ pacman -R mc
+ 132102 pts/2    SN+    0:00              \_ /bin/sh /usr/bin/etckeeper post-install
+ 132106 pts/2    SN+    0:00                  \_ /bin/sh /etc/etckeeper/post-install.d/50vcs-commit
+```
+
+Perhaps this could be done in a more generic way by traversing the parents until HIGHLEVEL_PACKAGE_MANAGER is found, I'll try to play with that.
+
+"""]]
