@@ -1,0 +1,66 @@
+[[!comment format=mdwn
+ username="joey"
+ subject="""comment 1"""
+ date="2024-12-11T17:09:22Z"
+ content="""
+I took at look at what's happening here. I see this kind of process tree
+when running etckeeper post-install by hand:
+
+	 397908 pts/16   Ss     0:00  |           \_ sudo -H /bin/bash
+	 397909 pts/16   S      0:00  |               \_ /bin/bash
+	 399115 pts/16   S+     0:00  |                   \_ /bin/sh /usr/bin/etckeeper post-install
+	 399121 pts/16   S+     0:00  |                       \_ /bin/sh /etc/etckeeper/post-install.d/50vcs-commit
+
+And `ETCKEEPER_PID` is set to 397909 and `ETCKEEPER_PPID` to 397908.
+Which is indeed kind of wrong in this case. Your patch fixes this.
+
+However, when using `apt-get install` on Debian, the current code actually makes
+it do the right thing, and report eg "committing changes in /etc made by
+"apt-get install foo". In that case, the process tree is like this:
+
+	 400678 pts/18   S+     0:01  |                   \_ apt-get remove --purge docbook-xsl libxml2-utils
+	 400894 pts/18   S+     0:00  |                       \_ apt-get remove --purge docbook-xsl libxml2-utils
+	 400895 pts/18   S+     0:00  |                           \_ sh -c -- if [ -x /usr/bin/etckeeper ]; then etckeeper post-install; fi
+	 400896 pts/18   S+     0:00  |                               \_ /bin/sh /usr/bin/etckeeper post-install
+	 400901 pts/18   S+     0:00  |                                   \_ /bin/sh /etc/etckeeper/post-install.d/50vcs-commit
+
+With your patch it will pick 400895 as `ETCKEEPER_PPID`. Which technically,
+it is. But that is not the command that the user ran, it's a hook script
+that apt is configured to run, in order to run etckeeper post-install.
+
+So in order to apply your change, this change would also be needed:
+
+	diff --git a/apt.conf b/apt.conf
+	index 5e690a2..5d98d43 100644
+	--- a/apt.conf
+	+++ b/apt.conf
+	@@ -1,5 +1,5 @@
+	-DPkg::Pre-Invoke       { "if [ -x /usr/bin/etckeeper ]; then etckeeper pre-install; fi"; };
+	-DPkg::Post-Invoke      { "if [ -x /usr/bin/etckeeper ]; then etckeeper post-install; fi"; };
+	+DPkg::Pre-Invoke       { "if [ -x /usr/bin/etckeeper ]; then exec etckeeper pre-install; fi"; };
+	+DPkg::Post-Invoke      { "if [ -x /usr/bin/etckeeper ]; then exec etckeeper post-install; fi"; };
+	 
+	-RPM::Pre-Invoke       { "if [ -x /usr/bin/etckeeper ]; then etckeeper pre-install; fi"; };
+	-RPM::Post-Invoke      { "if [ -x /usr/bin/etckeeper ]; then etckeeper post-install; fi"; };
+	+RPM::Pre-Invoke       { "if [ -x /usr/bin/etckeeper ]; then exec etckeeper pre-install; fi"; };
+	+RPM::Post-Invoke      { "if [ -x /usr/bin/etckeeper ]; then exec etckeeper post-install; fi"; };
+
+But the same kind of change would also need to be made to other
+package managers' hook scripts.
+
+This is making me start to wonder if all this complexity is needed at all.
+There is an alternative message it can used, "committing changes in /etc after $HIGHLEVEL_PACKAGE_MANAGER run"
+which avoids this complexity and should be fine. This business of walking
+the process tree is a fairly recent addition and is buggy, so why do it.
+
+On the third hand, it is pretty nice, when it works, to see the actual
+package manager command line in the commit message.
+
+I guess what we could do is vary how `ETCKEEPER_PPID` is determined based
+on `HIGHLEVEL_PACKAGE_MANAGER`. And only use it for the message when it's a
+package manager we know how to get the pid of. Which right now, for me, is
+only apt..
+
+Were you using pacman, or pacman-g2? I guess pacman since it looks like
+it probably exec's etckeeper without any `sh -c` process.
+"""]]
