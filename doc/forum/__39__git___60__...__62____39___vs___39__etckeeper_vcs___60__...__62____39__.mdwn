@@ -1,0 +1,5 @@
+I know there is a similar topic from a couple of years ago, but my dull brain wants to clarify . . .
+
+The examples in `etckeeper`'s readme show that once `etckeeper init` is run, you should run commands like  `git commit -a -m "added history.sh"`. However, other tutorials (such as from Ubuntu) say we should run `etckeeper vcs commit -a -m "added history.sh"` instead. Is there a difference? If so, which should we be using on a general basis?
+
+Thanks!
