@@ -12,7 +12,7 @@ It's quite modular and configurable, while also being simple to use if you
 understand the basics of working with version control.
 
 <html>
-<video controls width=400 title="introduction to etckeeper by Francois Marier" src="https://downloads.kitenet.net/videos/etckeeper.ogv"></video>
+<video controls width=400 title="introduction to etckeeper by Francois Marier" src="https://downloads.kitenet.net/videos/etckeeper.webm"></video>
 </html>
 
 [[!sidebar content="""
