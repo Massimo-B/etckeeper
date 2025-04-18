@@ -1,0 +1,11 @@
+[[!comment format=mdwn
+ username="martinb@7bdfc28113b7acb84694cf7e21a2e35079ff86cd"
+ nickname="martinb"
+ avatar="http://cdn.libravatar.org/avatar/1ac49d17d0b74b624a02077c5e4854e9"
+ subject="fix for the patch"
+ date="2025-04-18T22:37:31Z"
+ content="""
+I noticed a problem in my proposal (when the transaction proceeds, the dnf5 assumes particular output format which `etckeeper post-install` obviously doesn't follow) and fixed it by dropping `raise_error=1` from the post transaction hook (this is not necessary anyway).
+
+Updated patch in dnf5 branch here: <https://gitlab.com/marbu/etckeeper.branchable.com/-/blob/dnf5/etckeeper-dnf5/etckeeper.actions?ref_type=heads>
+"""]]
