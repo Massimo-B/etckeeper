@@ -1,0 +1,31 @@
+[[!comment format=mdwn
+ username="martinb@7bdfc28113b7acb84694cf7e21a2e35079ff86cd"
+ nickname="martinb"
+ avatar="http://cdn.libravatar.org/avatar/1ac49d17d0b74b624a02077c5e4854e9"
+ subject="proposed dnf5 plugin"
+ date="2025-04-18T21:10:25Z"
+ content="""
+Since dnf5 plugins have to be implemented in c++ while etckeeper plugin needs to just run `etckeeper pre-install` or `etckeeper post-install`, I investigated whether one can use [Actions plugin](https://dnf5.readthedocs.io/en/latest/libdnf5_plugins/actions.8.html) to achieve that using simple config file (without writing new glue code).
+
+And it turned out that dnf5 Actions plugin lacked a way to propagate errors, which was implemented via [dnf#2023](https://github.com/rpm-software-management/dnf5/issues/2023), available since dnf 5.2.11.0.
+
+So with dnf >= 5.2.11.0 the following config file:
+
+```
+pre_base_setup:::raise_error=1:etckeeper pre-install
+post_transaction:::raise_error=1:etckeeper post-install
+```
+
+Will do the job. Tested on Fedora 41 with dnf5-5.2.12.0-2.fc41.x86_64:
+
+```
+# dnf update neovim
+
+** etckeeper detected uncommitted changes in /etc prior to dnf run
+** Aborting dnf run. Manually commit and restart.
+
+File \"/etc/dnf/libdnf5-plugins/actions.d/etckeeper.actions\" on line 3: Exit code: 1
+```
+
+See proposed patch in <https://gitlab.com/marbu/etckeeper.branchable.com/-/commit/2a292f255be2363423a0e0a5a1169d8f6a8e3755>
+"""]]
