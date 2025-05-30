@@ -1,0 +1,15 @@
+[[!comment format=mdwn
+ username="vp"
+ avatar="http://cdn.libravatar.org/avatar/b24be16afedd34f7a9de5dbe32ee9f50"
+ subject="Proposed fix for Debian #884824"
+ date="2025-05-30T10:15:51Z"
+ content="""
+Hi,
+I've proposed a fix [1] for the second bug in the OP and have been advised to submit it upstream. Would you please consider including the proposed fix?
+
+Let me know if you need more information, if I should submit the change in a different form, etc. Thanks!
+
+
+[1] https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=884824#50
+
+"""]]
