@@ -1,0 +1,9 @@
+Hi all, 
+
+I read somewhere that if configuration outside the `/etc` directory needs to be stored, with `git` as the vcs it can be stored using the `etckeeper commit -d /home/yuser/someprog/config/*.conf` or maybe `etckeeper add -d /home/yuser/someprog/config/*.config` followed by an `etckeeper commit` command.
+
+Is it possible to do this?  And what happens when I check the code out again?  Will it go to `/home/yuser/someprog/config/`?
+
+Thank you, 
+
+helpdeskaleer
