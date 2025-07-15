@@ -1,0 +1,21 @@
+[[!comment format=mdwn
+ username="http://thm.id.fedoraproject.org/"
+ nickname="thm"
+ avatar="http://cdn.libravatar.org/avatar/f274b586047bb4a60d0332e647cd1bea"
+ subject="Action file fix"
+ date="2025-07-15T09:02:25Z"
+ content="""
+In my tests, the action plugin expects all output lines of the action to follow a certain format (and errors out otherwise with \"Synax error: Missing equal sign (=) in action output line: ...\").
+
+See <https://github.com/rpm-software-management/dnf5/blob/main/doc/libdnf5_plugins/actions.8.rst#action-standard-output-format>.
+
+Hence my proposal is this:
+
+```
+# to be placed in /etc/dnf/libdnf5-plugins/actions.d
+# requires dnf5 5.2.11.0 or later
+pre_base_setup:::raise_error=1:/usr/bin/sh -c /usr/bin/etckeeper\ pre-install\ \|\ /usr/bin/sed\ -e\ 's/^/log.INFO=/'
+post_transaction::::/usr/bin/sh -c /usr/bin/etckeeper\ post-install\ \|\ /usr/bin/sed\ -e\ 's/^/log.INFO=/'
+```
+
+"""]]
