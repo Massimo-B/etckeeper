@@ -1,0 +1,9 @@
+[[!comment format=mdwn
+ username="joey"
+ subject="""Re: Proposed fix for Debian #884824"""
+ date="2025-08-16T15:24:25Z"
+ content="""
+That looks like a good fix. But I cannot apply it upsteam because etckeeper
+does not have a debian/ directory upstream. It will need to be applied to
+the debian package.
+"""]]
