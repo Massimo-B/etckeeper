@@ -1,0 +1,17 @@
+[[!comment format=mdwn
+ username="joey"
+ subject="""comment 5"""
+ date="2025-08-16T15:28:53Z"
+ content="""
+This should not have been left unaddressed so long, and I'm not sure why I
+was having difficulty reproducing it back in 2020. This has been bothering
+a lot of users.
+
+Unfortunatly, all I can really do about it is to remove the systemd timer.
+The cron job is provided by the debian package, not part of etckeeper
+upstream, so I can't modify it to avoid running when the systemd timer is
+enabled. I have suggested that modification to upsteam.
+
+If this does not get sorted out fairly soon in Debian, I think I will
+have to remove the systemd timer.
+"""]]
