@@ -45,6 +45,8 @@ ifeq ($(HIGHLEVEL_PACKAGE_MANAGER),apt)
 	$(INSTALL_DATA) apt.conf $(DESTDIR)$(etcdir)/apt/apt.conf.d/05etckeeper
 	mkdir -p $(DESTDIR)$(etcdir)/cruft/filters-unex
 	$(INSTALL_DATA) cruft_filter $(DESTDIR)$(etcdir)/cruft/filters-unex/etckeeper
+	mkdir -p $(DESTDIR)$(etcdir)/cron.daily
+	$(INSTALL_EXE) cron.daily $(DESTDIR)$(etcdir)/cron.daily/etckeeper
 endif
 ifeq ($(LOWLEVEL_PACKAGE_MANAGER),pacman)
 	mkdir -p $(DESTDIR)$(prefix)/share/libalpm/hooks

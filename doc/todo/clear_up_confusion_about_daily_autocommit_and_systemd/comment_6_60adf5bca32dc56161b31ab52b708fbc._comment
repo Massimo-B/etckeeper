@@ -1,0 +1,13 @@
+[[!comment format=mdwn
+ username="joey"
+ subject="""comment 6"""
+ date="2025-08-16T16:08:34Z"
+ content="""
+I have added cron.daily back to etckeeper, and made it avoid doing anything
+when the systemd timer is enabled.
+
+Once the debian package is updated, I expect it will be made to use etckeeper's
+cron.daily, rather than debian/cron.daily, and so this will be fixed in
+Debian. Anyway, I've done all I can, and it's fixed in etckeeper, so
+closing this bug here.
+"""]]

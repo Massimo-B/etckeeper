@@ -4,6 +4,9 @@ etckeeper (1.18.23) UNRELEASED; urgency=medium
     managers like pacman and zypper.
   * Fix bug in xbps support when generating commit message.
     Thanks, Alexander Karelas
+  * Include cron.daily back in etckeeper.
+  * Makefile: Install cron.daily on debian based systems.
+  * cron.daily: Avoid doing anything when etckeeper.timer is enabled.
 
  -- Joey Hess <id@joeyh.name>  Wed, 11 Dec 2024 13:46:53 -0400
 

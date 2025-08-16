@@ -36,7 +36,7 @@ make %{?_smp_mflags}
 %install
 rm -rf $RPM_BUILD_ROOT
 make install DESTDIR=$RPM_BUILD_ROOT
-install -D debian/cron.daily $RPM_BUILD_ROOT/etc/cron.daily/etckeeper
+install -D cron.daily $RPM_BUILD_ROOT/etc/cron.daily/etckeeper
 
 
 %clean
