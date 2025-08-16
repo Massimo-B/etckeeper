@@ -1,0 +1,8 @@
+etckeeper 1.18.23 released with [[!toggle text="these changes"]]
+[[!toggleable text="""  * Fix determining command line for commit log when using some package
+    managers like pacman and zypper.
+  * Fix bug in xbps support when generating commit message.
+    Thanks, Alexander Karelas
+  * Include cron.daily back in etckeeper.
+  * Makefile: Install cron.daily on debian based systems.
+  * cron.daily: Avoid doing anything when etckeeper.timer is enabled."""]]
