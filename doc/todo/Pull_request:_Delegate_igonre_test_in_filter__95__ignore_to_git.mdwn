@@ -1,0 +1,60 @@
+Repo and branch: https://github.com/tsuburin/etckeeper/tree/feature/delegate-ignore-check-to-git
+
+## Summary
+
+This PR fixes the problem that empty directories in `.gitignore` are not actually ignored in `.etckeeper`.
+
+## Description
+The function `filter_ignore` in `pre-commit.d/30store-metadata` doesn't filter empty directories.
+For example,
+
+```shell-session
+[root@ankou ~]# cd /etc
+[root@ankou etc]# mkdir empty
+[root@ankou etc]# echo empty >> .gitignore
+[root@ankou etc]# etckeeper pre-commit
+[root@ankou etc]# grep empty .etckeeper
+mkdir -p './empty'
+maybe chmod 0755 'empty'
+```
+
+There are two points in the current script that cause this problem.
+
+First, filter_ignore is not applied when generating `mkdir -p` lines at [line 71-72](https://github.com/tsuburin/etckeeper/blob/016d2d0597415b0e6f88275f018b35548ebdda8f/pre-commit.d/30store-metadata#L71C1-L72C47),
+
+```bash
+find $NOVCS -type d -empty -print |
+	sort | shellquote | sed -e "s/^/mkdir -p /"
+```
+ So, no directory is excluded here, regardless of the contents of `.gitignore`.
+
+Second, `filter_ignore` doesn't handle directories correctly. Here I found two problems.
+
+One is that `git ls-files` puts a trailing slash at the end of each directory while `find` doesn't.
+
+```shell-session
+[root@ankou etc]# git ls-files -oi --exclude-standard --directory
+empty/
+[root@ankou etc]# find . -path ./.git -prune -o -type d -empty -print | grep empty
+./empty
+```
+So if we use this approach, when comparing them at [line 33](https://github.com/tsuburin/etckeeper/blob/016d2d0597415b0e6f88275f018b35548ebdda8f/pre-commit.d/30store-metadata#L33),
+
+```bash
+sed 's/^\.\///' | LC_CTYPE=C grep -xFvf "$listfile"
+```
+we have to make them in the same format by some means like `sed 's-$-/-'`, as proposed in [Do not recreate ignored empty director](https://etckeeper.branchable.com/todo/Do_not_recreate_ignored_empty_directory/).
+
+The other problem is that with `--directory` option `git ls-files` outputs only the uppermost ignored directories, so nested directories cannot be filtered.
+Let's say we have an entry `/xxx/` in `.gitignore`, and `/etc/xxx/` has a directory `yyy` in it. In this case, `git ls-files -oi --exclude-standard --directory` outputs `/etc/xxx/`, but not `/etc/xxx/yyy/`. So, later when we apply `filter_ignore` to the result of `find` [at line 86](https://github.com/tsuburin/etckeeper/blob/016d2d0597415b0e6f88275f018b35548ebdda8f/pre-commit.d/30store-metadata#L86),
+
+```bash
+find $NOVCS \( -type f -or -type d \) -print | filter_ignore | sort | maybe_chmod_chown
+```
+`/etc/xxx/yyy` is not excluded. I think this problem is a big burden, so I propose a different approach in my PR.
+
+My PR fixes these points. For the first point, I just added filter_ignored at aforementioned place. For the second point, I rewrote filtering logic using [`git check-ignore`](https://git-scm.com/docs/git-check-ignore). This command tests each path if it's ignored regardless of whether it's a file or a directory, so we can simply filter all `find`-ed paths. Additionally, the command outputs the paths without modifying, so we no longer need to modify them;; by `sed`. 
+
+## Related posts
+* https://etckeeper.branchable.com/todo/metadata_ignore_filters_do_not_work/
+* https://etckeeper.branchable.com/todo/Do_not_recreate_ignored_empty_directory/
