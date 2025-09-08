@@ -1,0 +1,20 @@
+[[!comment format=mdwn
+ username="tsuburin"
+ avatar="http://cdn.libravatar.org/avatar/fa81c401ccac77122881956f11144b8b"
+ subject="comment 1"
+ date="2025-09-08T11:52:09Z"
+ content="""
+I noticed that not only empty directories but any ignored nested directories are not ignored now.
+
+```shell-session
+[root@ankou etc]# grep xxx .gitignore
+/xxx/
+[root@ankou etc]# echo hoge > xxx/yyy/test
+[root@ankou etc]# etckeeper pre-commit
+[root@ankou etc]# grep xxx .etckeeper
+maybe chmod 0755 'xxx'
+maybe chmod 0755 'xxx/yyy'
+```
+
+My PR solves this too.
+"""]]
