@@ -1,0 +1,66 @@
+[[!comment format=mdwn
+ username="http://thm.id.fedoraproject.org/"
+ nickname="thm"
+ avatar="http://cdn.libravatar.org/avatar/f274b586047bb4a60d0332e647cd1bea"
+ subject="comment 5"
+ date="2025-11-01T14:41:13Z"
+ content="""
+Based on feedback and comments in the Fedora tickets
+
+[1](https://bugzilla.redhat.com/show_bug.cgi?id=2326283),
+[2](https://bugzilla.redhat.com/show_bug.cgi?id=2383375),
+[3](https://bugzilla.redhat.com/show_bug.cgi?id=2383751),
+[4](https://bugzilla.redhat.com/show_bug.cgi?id=2387561),
+
+I propose these changes to the action file:
+
+- Set `pipefail` to not cushion etckeeper's return code
+- Use the `goal_resolved` hook instead of `pre_base_setup` to allow non-root usage of `dnf` and avoid (costly) `etckeeper` runs for `dnf` actions not installing or removing any package. Not sure if that is the best choice. Looking at the [DNF5 workflow](https://dnf5.readthedocs.io/en/latest/dnf5_workflow.html), a hook between 22.8 and 22.9, i.e., after user approval would be nice. Open to suggestions.
+- Pass `dnf`'s PID to `etckeeper`'s `post-install.d/50vcs-commit` to allow for better commit subjects via `ETCKEEPER_PARENT_COMMAND_LINE`. This needs another patch for `post-install.d/50vcs-commit` though, to actually use that information.
+
+With that, the action file would look like
+
+```sh
+# to be placed in /etc/dnf/libdnf5-plugins/actions.d
+# requires dnf5 5.2.11.0 or later
+goal_resolved:::raise_error=1:/usr/bin/sh -o pipefail -c /usr/bin/etckeeper\ pre-install\ \|\ /usr/bin/sed\ -e\ 's/^/log.INFO=/'
+post_transaction::::/usr/bin/sh -o pipefail -c ETCKEEPER_PPID=${pid}\ /usr/bin/etckeeper\ post-install\ \|\ /usr/bin/sed\ -e\ 's/^/log.INFO=/'
+```
+
+and patching `post-install.d/50vcs-commit` so that the relevant part looks like this (allowing to pass an `ETCKEEPER_PPID` from the outside):
+
+```sh
+if [ -z \"${ETCKEEPER_PPID}\" ]; then
+	# Find the pid whose parent is the command line that the user ran.
+	# Depending on how the highlevel package manager starts etckeeper,
+	# this can be either the parent process, or the parent of the parent
+	# process.
+	case $HIGHLEVEL_PACKAGE_MANAGER in
+		pacman|zypper|dnf)
+			ETCKEEPER_PID=\"${PPID}\"
+		;;
+		apt|yum)
+			# (Only procps ps is currently supported, others will fail,
+			# so this may end up empty.)
+			ETCKEEPER_PID=$( ps --no-headers -o ppid \"${PPID}\" 2>/dev/null | sed 's/^ *//' )
+		;;
+	esac
+
+	if ! [ -z \"${ETCKEEPER_PID}\" ]; then
+		# Find the parent to get the command line.
+		# (Only procps ps is currently supported, others will fail,
+		# so this may end up empty.)
+		ETCKEEPER_PPID=$( ps --no-headers -o ppid \"${ETCKEEPER_PID}\" 2>/dev/null | sed 's/^ *//' )
+	fi
+fi
+
+if ! [ -z \"${ETCKEEPER_PPID}\" ]; then
+	ETCKEEPER_PARENT_COMMAND_LINE=$( ps --no-headers -o args \"${ETCKEEPER_PPID}\" )
+fi
+```
+
+Note that for the old DNF plugin we carried a patch anyway, hence I moved it in the `pacman|zypper` branch, see [this ticket](https://bugzilla.redhat.com/show_bug.cgi?id=2203408).
+
+Would such a patch be acceptable, @joey ?
+
+"""]]
