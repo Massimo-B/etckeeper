@@ -1,0 +1,19 @@
+[[!comment format=mdwn
+ username="joey"
+ subject="""comment 1"""
+ date="2026-02-18T15:35:41Z"
+ content="""
+I have the file here but git log says it's only changed once since it
+appeared in August. Checking another machine, the file is unchanged since
+2024.
+
+It seems the file will only change if /usr's mtime is changed. It's fairly
+rare for a new top-level item to be added/removed to /usr, which is what
+changes the mtime of the directory.
+
+This file is not configuration per se, but if the system is set up to do
+offline updates, it seems to me that you would want to preserve it? Also,
+since the offline updates do modify /etc, the change to the file that gets
+committed at the same time would document that offline update caused it,
+which seems desirable.
+"""]]
