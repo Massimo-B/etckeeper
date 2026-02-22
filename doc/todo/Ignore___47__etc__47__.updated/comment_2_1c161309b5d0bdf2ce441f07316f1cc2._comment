@@ -1,0 +1,16 @@
+[[!comment format=mdwn
+ username="vp"
+ avatar="http://cdn.libravatar.org/avatar/b24be16afedd34f7a9de5dbe32ee9f50"
+ subject="comment 2"
+ date="2026-02-22T11:13:30Z"
+ content="""
+In my case /etc/.updated had not been committed as part of the post-upgrade commit. The file must have been created after the first reboot following upgrade. I have `AVOID_COMMIT_BEFORE_INSTALL=1` set, so the following run of unattended-upgrades failed due to uncommitted /etc/.updated. The file is generated and its contents did not seem useful, hence my inclination to ignore. I use etckeeper not only as a backup of /etc, but more importantly to document the changes and in the case of /etc/.updated I had nothing to document.
+
+> It seems the file will only change if /usr's mtime is changed.
+
+Right, that's what systemd-update-done.service(8) says. The comment at the top of /etc/.updated, however, says the following: \"Its only purpose is to hold a timestamp of the time this directory was updated\". \"This directory\" would seem to suggest /etc, so I'm not sure which it is. Interestingly, the file timestamp and the timestamp value inside are of 2024-02-10, while the upgrade was done on 2026-02-14.
+
+> This file is not configuration per se, but if the system is set up to do offline updates, it seems to me that you would want to preserve it? Also, since the offline updates do modify /etc, the change to the file that gets committed at the same time would document that offline update caused it, which seems desirable.
+
+I don't use systemd.offline-updates, so I can't say if committing /etc/.updated would be useful in that case. In the case of unattended-upgrades, it is clear from the commit message that it was the result of a u-a run.
+"""]]
