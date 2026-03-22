@@ -1,0 +1,20 @@
+During `dnf` runs on Fedora 43 (dnf5-5.2.18.0-2.fc43.x86_64, rpm-6.0.1-1.fc43.x86_64) with `etckeeper-dnf5` installed, anytime a package upgrade **deletes** a file that is under etckeeper control, a (harmless) error message is printed towards the end of the transaction output.
+
+For example, a recent update to the `forgejo-runner` package no longer contained the file `/etc/forgejo-runner/config.dist.yml` that was present in previous versions of the package, and therefore tracked by `etckeeper`. When upgrading `forgejo-runner` using DNF 5 with `etckeeper-dnf5` installed, the end of the transaction would include the line:
+
+```text
+error: file /etc/forgejo-runner/config.dist.yml: No such file or directory
+```
+
+The message comes from an `rpm` command run by `etckeeper` in its post-install hooks. Specifically, the culprit is `/etc/etckeeper/post-install.d/50vcs-commit` in the `get_changed_packages()` function, which for RPM runs this branch:
+
+```bash
+if [ "$LOWLEVEL_PACKAGE_MANAGER" = rpm ]; then
+	# if output contains file path, file was not found
+	get_changes | sed 's/^/\/etc\//;s/\s*$//' | xargs -d '\n' rpm --qf '%{NAME}\n' -qf | grep -v "/etc/"
+fi
+```
+
+The optimistic comment above the pipeline is unfortunately out of date, as `rpm` 6.0.1 (if not earlier) prints error messages about missing files to stderr instead of stdout. So, the line containing the filepath will not be in the output of the command, it will already have been displayed to the user.
+
+Adding `2>&1` to the `xargs` command in the pipeline that runs `rpm` should resolve the issue.
