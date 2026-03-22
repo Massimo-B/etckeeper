@@ -1,0 +1,8 @@
+[[!comment format=mdwn
+ username="ferdnyc"
+ avatar="http://cdn.libravatar.org/avatar/0a1d7aeb5a21edb0fcce12df464ff13b"
+ subject="comment 1"
+ date="2026-03-22T22:57:07Z"
+ content="""
+(Or, come to think of it, the command could just be extended with `2>/dev/null` and the `grep -v` **removed** instead. Its only purpose is to filter out the lines that are now only present on stderr, so there's no need to filter them from stdout at all, anymore.)
+"""]]
