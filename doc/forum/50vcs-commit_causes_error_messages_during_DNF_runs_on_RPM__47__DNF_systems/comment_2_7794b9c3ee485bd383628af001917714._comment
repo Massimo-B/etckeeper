@@ -1,0 +1,16 @@
+[[!comment format=mdwn
+ username="ferdnyc"
+ avatar="http://cdn.libravatar.org/avatar/0a1d7aeb5a21edb0fcce12df464ff13b"
+ subject="comment 2"
+ date="2026-03-24T11:55:06Z"
+ content="""
+I've since tested, and this does indeed work to suppress the messages about missing files during DNF transactions, in place of the code quoted above (from lines 41-44 of `/etc/etckeeper/post-install/50vcs-commit`):
+
+```bash
+        if [ \"$LOWLEVEL_PACKAGE_MANAGER\" = rpm ]; then
+                # messages about missing files are sent to stderr
+                get_changes | sed 's/^/\/etc\//;s/\s*$//' | xargs -d '\n' rpm 2>/dev/null --qf '%{NAME}\n' -qf
+        fi
+```
+
+"""]]
