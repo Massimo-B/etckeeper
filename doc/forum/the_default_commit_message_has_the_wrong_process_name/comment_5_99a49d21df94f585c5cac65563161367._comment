@@ -1,0 +1,8 @@
+[[!comment format=mdwn
+ username="ferdnyc"
+ avatar="http://cdn.libravatar.org/avatar/0a1d7aeb5a21edb0fcce12df464ff13b"
+ subject="comment 5"
+ date="2026-03-24T16:13:30Z"
+ content="""
+Actually, looking at Dam9k's message that started all of this, I guess the _default_ `ETCKEEPER_PARENT_LEVEL` would be `2`, not `1`. The DNF scripts would pass `-l 3` when they run `etckeeper`, and the `pacman` integration would use `-l 1`.
+"""]]
