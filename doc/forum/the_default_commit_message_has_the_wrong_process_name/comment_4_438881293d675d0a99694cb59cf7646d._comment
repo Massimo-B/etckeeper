@@ -1,0 +1,71 @@
+[[!comment format=mdwn
+ username="ferdnyc"
+ avatar="http://cdn.libravatar.org/avatar/0a1d7aeb5a21edb0fcce12df464ff13b"
+ subject="DNF's action scripts make an even bigger mess of it"
+ date="2026-03-24T16:04:46Z"
+ content="""
+This situation is arguably made even worse by the transaction-hooks implemented for DNF 5, which currently cause commit messages like this:
+
+```text
+Author: (me)
+Date:   Mon Mar 23 04:57:35 2026 -0400
+
+    committing changes in /etc made by \"/usr/bin/sh -c /usr/bin/etckeeper post-install | /usr/bin/sed -e 's/^/log.INFO=/'\"
+    
+    Package changes:
+    -0:Pencil2D-0.7.0-18.fc43.x86_64
+    +0:Pencil2D-0.7.2-1.fc43.x86_64
+    -0:btrfs-progs-6.17.1-1.fc43.x86_64
+    -0:btrfs-progs-devel-6.17.1-1.fc43.x86_64
+    +0:btrfs-progs-6.19.1-1.fc43.x86_64
+    +0:btrfs-progs-devel-6.19.1-1.fc43.x86_64
+    -0:forgejo-runner-5.0.4-1.fc42.x86_64
+    +0:forgejo-runner-12.7.1-1.fc43.x86_64
+    -0:gnome-control-center-49.5-1.fc43.x86_64
+    -0:gnome-control-center-filesystem-49.5-1.fc43.noarch
+```
+
+That nonsense command line is the one found in `/etc/dnf/libdnf5-plugins/actions.d/etckeeper.actions` where it's configured as a `post_transaction` hook. (Ignore the `sed` command it's piped into in order to convert the script's output into DNF 5 log messages. Awful design decision in libdnf5, at least IMHO. Why it wouldn't just log whatever the script dumps to stdout is beyond my comprehension.) Presumably you'd need to look at **its** parent, to discover that `dnf` is the package management tool in use.
+
+But anyway, all of this is to say that I agree: the process discovery used in 50vcs-commit is too simplistic/limited to handle all of the scenarios etckeeper may find itself operating under.
+
+It's stupid, but I wonder if something like a parent-level argument passed to etckeeper when a VCS runs commands might not be the most universal approach.
+
+i.e. `etckeeper` itself gets logic similar to this, in its option parsing, to replace the simplistic \"-d\" handling that's currently there:
+
+```bash
+while [ \"x${1:0:1}\" = \"x-\" ]; do
+  case \"$1\" in
+  \"-d\")
+    ETCKEEPER_DIR=\"$2\"
+    shift 2
+    ;;
+  \"-l\")
+    ETCKEEPER_PARENT_LEVEL=\"$2\"
+    shift 2
+    ;;
+  \"--\")
+    shift
+    break
+    ;;
+  *)
+    # Complain about an unknown option error
+    ;;
+  esac
+done
+```
+
+(Or I suppose it could just use `getopt`/`getopts`, since it's gotten complex enough.)
+
+Regardless, `ETCKEEPER_PARENT_LEVEL` is set to the numeric value that follows the `-l` flag, which would dictate how many levels up the process tree it should climb when looking for the relevant parent process. (The default would be `ETCKEEPER_PARENT_LEVEL=1`, IOW look for the direct parent of the etckeeper script invocation.)
+
+The command in `libdnf5-plugins/actions.d/etckeeper.actions` could be changed to: 
+
+```bash
+/usr/bin/sh -c /usr/bin/etckeeper -l 2 post-install
+```
+
+...so that etckeeper knows it has to look **two** levels upward to find the relevant `dnf` command, in that instance. Any other VCS integrations where etckeeper will execute at a deeper level than a direct child process could similarly provide an appropriate `-l` argument for their process structure.
+
+It's unquestionably kludgey and hackish. But given the unpredictable variety of scenarios etckeeper may be expected to handle, it's also the most flexible approach. And etckeeper doesn't have to be extended with explicit supporting logic each time a new packaging tool or integration scenario comes up, in order to do the right thing.
+"""]]
