@@ -1,0 +1,35 @@
+[[!comment format=mdwn
+ username="ferdnyc"
+ avatar="http://cdn.libravatar.org/avatar/0a1d7aeb5a21edb0fcce12df464ff13b"
+ subject="comment 1"
+ date="2026-03-24T12:35:45Z"
+ content="""
+I'm not a developer here, but as a longterm user of etckeeper... I don't think that would be a very good idea, personally.
+
+The thing is that etckeeper's value isn't **just** about automatically managing a bunch of files in a VCS. There are lots of things that can do that. What etckeeper brings to the table are the things that also make it specific to a system's `/etc` directory. Things like:
+
+* Its understanding of how to manage permissions on files and directories in `/etc`, above and beyond what VCS systems natively track, so that the repository managed by the VCS is usable as a historical record of the system configuration, and older states can be restored without corrupting the system configuration.
+
+* Its integration with the system package management, with automatic monitoring of package transactions and automated commits when changes are made by package tools.
+
+None of that really applies to configuration anywhere else, and most of it actively works _against_ any other type of configuration management.
+
+1. Configuration in a user's home directory isn't going to be altered by package transactions, and the package-transaction scripts in `/etc/etckeeper/` would likely get thrown off by user-configuration files being part of the repo, when attempting to automatically track changes.
+
+2. Configuration in a user's home directory isn't going to need special management of ownership and permissions. All of the files will be owned by the user and edited only by that user.
+
+3. Configuration in a user's home directory almost certainly shouldn't be mixed with system configuration in `/etc`, even on a single-user personal machine where the user in question is solely in charge of both their account configuration and the systemwide configuration. They're just different problem domains that don't lend themselves to a combined solution.
+
+If you just want to keep your `$HOME/.config/` in version control, great idea! I do the same thing. But you don't need (and I would argue, don't _want_) etckeeper to do that. All you need is this:
+
+```bash
+cd $HOME/.config
+git init
+git add -A
+git commit -m \"Configuration import\"
+```
+
+And then, if you don't think you'll remember to commit changes frequently enough, maybe set up a cron job or systemd `.timer` user unit to run `git commit -a -m \"Periodic commit for $(date)` or `git add -A; git commit -m \"Periodic commit for $(date)\"` in that directory on a regular basis. (`git commit -a` is safer but only updates or deletes already-tracked files, it won't pick up newly-added ones. `git add -A` is more comprehensive, but runs the danger of accidentally grabbing files you don't want to commit — though that can be mitigated somewhat by building a really comprehensive `.gitignore` file for the directory.)
+
+But most of etckeeper's features would be working _against_ you, in attempting to have it manage a `$HOME/.config/` space.
+"""]]
