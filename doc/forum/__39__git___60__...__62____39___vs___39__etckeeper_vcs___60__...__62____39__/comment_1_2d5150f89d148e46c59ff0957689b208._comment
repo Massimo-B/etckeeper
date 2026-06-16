@@ -1,0 +1,17 @@
+[[!comment format=mdwn
+ username="ferdnyc"
+ avatar="http://cdn.libravatar.org/avatar/0a1d7aeb5a21edb0fcce12df464ff13b"
+ subject="There is no difference"
+ date="2026-06-16T15:04:33Z"
+ content="""
+If you look at `/etc/etckeeper/vcs.d/50vcs-cmd` (which is the script that receives the arguments to `etckeeper vcs`),
+all it does is run,
+
+```
+$VCS \"$@\"
+```
+
+So it passes the commands right through to `git`.
+
+The only reason to use `etckeeper vcs ...` is if you're writing generic scripts that can't assume a particular underlying VCS. (And even then, since most of them have different syntax anything but the most basic commands won't be portable.)
+"""]]
