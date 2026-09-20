@@ -6,14 +6,27 @@ The original source is developed at
 
 ## Changes compared to the original
 
-- `pre-commit.d/30store-metadata` (also used as `commit.d/20store-metadata`)
-  and `pre-commit.d/20warn-problem-files` now prune git-ignored directories
-  during traversal (via `git ls-files -oi --exclude-standard --directory`)
-  instead of only filtering `find`'s output after a full scan. This makes
-  tracking a large tree practical, e.g. `etckeeper init -d /` combined with
-  a default-deny `.gitignore` (`*` plus explicit `!`-exceptions): ignored
-  subtrees such as `/proc` or `/sys` are no longer walked at all. This
-  optimization applies to the git backend only; hg/bzr/darcs are unaffected.
+- **Goal: allow tracking the whole root filesystem (`/`), not just `/etc`.**
+  etckeeper is normally used with `etckeeper init -d /etc`, where the
+  directory is small enough that scanning every file in it on every commit
+  is cheap. This fork also supports running it against the whole filesystem
+  (`etckeeper init -d /`) with a `.gitignore` that ignores everything by
+  default and only tracks the files/directories you explicitly add.
+
+  **The issue before this change:** even with such a `.gitignore` in place,
+  etckeeper still scanned every single file on the entire disk on every
+  commit — including huge or virtual locations like `/proc`, `/sys`, or
+  mounted drives — before throwing away the ones that were ignored. This
+  made using etckeeper on `/` extremely slow (and in some cases effectively
+  unusable, since scanning things like `/proc` can hang or take forever).
+
+  **The fix:** etckeeper now skips ignored directories entirely while
+  scanning, instead of scanning everything first and filtering afterward.
+  As a result, only the files and directories you've actually chosen to
+  track are ever looked at, making it practical to track `/` with a
+  "track only what I explicitly add" `.gitignore`. This only affects the
+  git backend; other version control backends (hg/bzr/darcs) and the
+  standard `/etc`-only use case are unaffected.
 
 ## License
 
