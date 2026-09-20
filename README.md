@@ -31,6 +31,13 @@ The original source is developed at
   A ready-to-copy sample `.gitignore` for this setup is provided in
   [`doc/gitignore-for-root-tracking`](doc/gitignore-for-root-tracking).
 
+  To use it:
+
+  1. Copy the sample file into place: `cp doc/gitignore-for-root-tracking /.gitignore`
+  2. Edit `/.gitignore` to un-ignore the paths you actually want to track
+     (see the comments in the file for how the `!` negation rules work).
+  3. Run `etckeeper init -d /`.
+
 ## License
 
 etckeeper is licensed under version 2 or greater of the GNU GPL (see the

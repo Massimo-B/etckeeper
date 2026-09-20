@@ -23,6 +23,8 @@ if [ ! -d "$dir" ]; then
 fi
 
 managed_by_etckeeper="managed by etckeeper"
+begin_marker="begin section $managed_by_etckeeper"
+end_marker="end section $managed_by_etckeeper"
 
 nl() {
 	echo >>"$file"
@@ -175,7 +177,7 @@ writefile () {
 }
 
 if [ -e "$file" ]; then
-	if ! grep -q "$managed_by_etckeeper" "$file"; then
+	if ! grep -q "$begin_marker" "$file"; then
 		if [ "$1" != "-a" ]; then
 			echo "etckeeper: "$file" does not contain \"$managed_by_etckeeper\" comment; not updating"
 			exit 1
@@ -202,13 +204,11 @@ if [ -e "$file" ]; then
 	(
 		skipping=
 		while read -r line; do
-			if echo "$line" | grep -q "$managed_by_etckeeper"; then
-				if [ ! "$skipping" ]; then
-					skipping=1
-				else
-					skipping=
-					writefile
-				fi
+			if [ ! "$skipping" ] && echo "$line" | grep -q "$begin_marker"; then
+				skipping=1
+			elif [ "$skipping" ] && echo "$line" | grep -q "$end_marker"; then
+				skipping=
+				writefile
 			elif [ ! "$skipping" ]; then
 				echo "$line" >> "$file"
 			fi

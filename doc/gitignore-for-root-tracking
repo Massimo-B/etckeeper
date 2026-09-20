@@ -23,7 +23,7 @@
 #   !/etc/fstab
 #   !/etc/hosts
 #
-# After init, etckeeper appends its own "managed by etckeeper" block to this
+# After init, etckeeper appends its own auto-generated ignore block to this
 # file. Your custom rules must appear above that block (put them here).
 # --------------------------------------------------------------------------
 
