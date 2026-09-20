@@ -12,8 +12,14 @@ elif [ "$VCS" = hg ]; then
 	special=$(find . ! -type d ! -type f ! -type l | exclude_internal) || true
 	hardlinks=$(find . -type f ! -links 1 -exec hg status {} \; | exclude_internal ) || true
 elif [ "$VCS" = git ]; then
-	special=$(find . ! -type d ! -type f ! -type l -exec git ls-files --exclude-standard --cached --others {} + | exclude_internal) || true
-	hardlinks=$(find . -type f ! -links 1 -exec git ls-files --exclude-standard --cached --others {} + | exclude_internal) || true
+	gitprune='-path ./.git -prune -o'
+	if [ -e .gitignore ]; then
+		for ignoreddir in $(git ls-files -oi --exclude-standard --directory); do
+			gitprune="$gitprune -path ./${ignoreddir%/} -prune -o"
+		done
+	fi
+	special=$(find . $gitprune ! -type d ! -type f ! -type l -exec git ls-files --exclude-standard --cached --others {} + | exclude_internal) || true
+	hardlinks=$(find . $gitprune -type f ! -links 1 -exec git ls-files --exclude-standard --cached --others {} + | exclude_internal) || true
 else
 	special=""
 fi

@@ -6,7 +6,14 @@ The original source is developed at
 
 ## Changes compared to the original
 
-_(No changes yet — this section will be filled in as changes are made in this fork.)_
+- `pre-commit.d/30store-metadata` (also used as `commit.d/20store-metadata`)
+  and `pre-commit.d/20warn-problem-files` now prune git-ignored directories
+  during traversal (via `git ls-files -oi --exclude-standard --directory`)
+  instead of only filtering `find`'s output after a full scan. This makes
+  tracking a large tree practical, e.g. `etckeeper init -d /` combined with
+  a default-deny `.gitignore` (`*` plus explicit `!`-exceptions): ignored
+  subtrees such as `/proc` or `/sys` are no longer walked at all. This
+  optimization applies to the git backend only; hg/bzr/darcs are unaffected.
 
 ## License
 

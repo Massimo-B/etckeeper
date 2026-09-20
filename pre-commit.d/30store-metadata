@@ -65,6 +65,19 @@ generate_metadata() {
 	# printed!)
 	NOVCS='. -path ./.git -prune -o -path ./.bzr -prune -o -path ./.hg -prune -o -path ./_darcs -prune -o'
 
+	if [ "$VCS" = git ] && [ -e .gitignore ]; then
+		# Avoid descending into (and stat-ing every entry of) directories
+		# that .gitignore excludes entirely, eg /proc or /sys when tracking
+		# / with a default-deny .gitignore. git ls-files --directory only
+		# reports a directory as ignored if nothing inside it is tracked or
+		# un-ignored, so partially-ignored directories are still walked
+		# normally and their individual ignored files are still caught by
+		# filter_ignore() below.
+		for ignoreddir in $(git ls-files -oi --exclude-standard --directory); do
+			NOVCS="$NOVCS -path ./${ignoreddir%/} -prune -o"
+		done
+	fi
+
 	if [ "$VCS" = git ] || [ "$VCS" = hg ]; then
 		# These version control systems do not track directories,
 		# so empty directories must be stored specially.
