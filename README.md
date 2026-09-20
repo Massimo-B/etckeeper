@@ -28,6 +28,9 @@ The original source is developed at
   git backend; other version control backends (hg/bzr/darcs) and the
   standard `/etc`-only use case are unaffected.
 
+  A ready-to-copy sample `.gitignore` for this setup is provided in
+  [`doc/gitignore-for-root-tracking`](doc/gitignore-for-root-tracking).
+
 ## License
 
 etckeeper is licensed under version 2 or greater of the GNU GPL (see the
