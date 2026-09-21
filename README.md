@@ -259,6 +259,48 @@ Of course, it's also possible to pull changes from a server onto client
 machines, to deploy changes to /etc. Once /etc is under version control, the
 sky's the limit..
 
+### Bootstrapping a new host with root-tracking onto a shared repo
+
+Here's how to bring a brand-new machine online using this fork's
+root-tracking mode (see "Changes compared to the original" above), while
+keeping each host's history on its own branch in a repo shared by all your
+machines.
+
+First, configure `/etc/etckeeper/etckeeper.conf` on the new host so `/` is
+the default directory for every etckeeper command, not just this session's:
+
+	ETCKEEPER_DIR=/
+
+Set up the ignore file as described above — copy
+[`doc/gitignore-for-root-tracking`](doc/gitignore-for-root-tracking) to
+`/.gitignore` and edit its `!` negations for the paths you want tracked (or
+leave it as a plain deny-all and use `git add -f` instead). Then initialise
+the repository and give it its own branch, named after the host, before
+making the first commit:
+
+	cd /
+	etckeeper init -d /
+	git branch -m hosts/$(hostname -s)
+
+Stage whatever you want tracked, check it with `git status`, and make the
+initial commit:
+
+	git add -f etc home/someuser/.ssh
+	git status
+	etckeeper commit "Initial commit"
+
+Finally, connect this branch to the shared repo, using the same kind of
+mode-700 bare repository over ssh shown above for backups, and push:
+
+	git remote add origin ssh://server/etc-root-shared
+	git push -u origin $(git branch --show-current)
+
+To sync later, `git pull` is fine for keeping this host's own branch
+up to date with what's been pushed for it. Don't merge another host's
+`hosts/<other>` branch into yours, though — as with the "several machines"
+case above, fetch it and diff or cherry-pick instead, since another host's
+tracked files, ownership and permissions don't apply to your machine.
+
 
 ## Configuration
 
