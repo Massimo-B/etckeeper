@@ -6,8 +6,11 @@
 # The important line is the very first one below: `/*` ignores everything.
 # If you're tracking paths by running `git add -f <path>` yourself (the
 # easiest approach — see the README's "Choosing a .gitignore strategy"
-# section), you're basically done as soon as that line is in place.
-#
+# section), you're basically done with that line:
+
+/*
+
+
 # --- Optional: automatic tracking via negation rules ---
 # If you'd rather have git pick up new files under certain paths on its
 # own (so you don't have to `git add -f` each new file individually), you
@@ -31,15 +34,3 @@
 # After init, etckeeper appends its own auto-generated ignore block to this
 # file. Your custom rules must appear above that block (put them here).
 # --------------------------------------------------------------------------
-
-# The one line that matters: ignore everything at the root level.
-/*
-
-# Optional: un-ignore paths you want tracked automatically (see above).
-# Not needed if you're using `git add -f` instead.
-
-# !/etc
-# !/home
-# !/home/username
-# !/home/username/.bashrc
-# !/boot
