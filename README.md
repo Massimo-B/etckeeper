@@ -38,6 +38,24 @@ The original source is developed at
      (see the comments in the file for how the `!` negation rules work).
   3. Run `etckeeper init -d /`.
 
+  **Alternative approach:** instead of maintaining `!`-negation rules in
+  `/.gitignore`, you can keep `.gitignore` as just the deny-all `/*` line and
+  explicitly track individual paths with `git add -f <path>`. Since
+  `.gitignore` only affects *untracked* files, once a path has been
+  force-added it stays tracked and its changes are picked up by etckeeper's
+  regular commits (`git add --all`) without any further `.gitignore` edits —
+  no need to maintain nested negation rules for each parent directory.
+
+  **Important:** `-d /` is not remembered between runs — pass it to every
+  etckeeper invocation you use for root-filesystem tracking (`etckeeper
+  commit -d /`, `etckeeper unclean -d /`, cron entries, etc.), not just
+  `init`. Without it, etckeeper defaults to `/etc` and will operate on that
+  directory instead (harmless, but produces confusing "not yet enabled for
+  /etc" / gitignore warnings if `/etc` itself was never separately
+  initialized). Alternatively, set `ETCKEEPER_DIR=/` in
+  `/etc/etckeeper/etckeeper.conf` to make `/` the default for all etckeeper
+  commands without needing `-d /` each time.
+
 ## License
 
 etckeeper is licensed under version 2 or greater of the GNU GPL (see the
