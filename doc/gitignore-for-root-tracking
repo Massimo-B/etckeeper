@@ -3,12 +3,17 @@
 # Place this file at /.gitignore, then run:
 #   etckeeper init -d /
 #
-# Git ignores everything by default. Add the paths you want to track by
-# un-ignoring them with "!" lines below. After init, use normal git commands
-# (git add, git commit) to manage your tracked files.
+# The important line is the very first one below: `/*` ignores everything.
+# If you're tracking paths by running `git add -f <path>` yourself (the
+# easiest approach — see the README's "Choosing a .gitignore strategy"
+# section), you're basically done as soon as that line is in place.
 #
-# --- How negation rules work ---
-# To un-ignore a nested path every component of that path must be un-ignored.
+# --- Optional: automatic tracking via negation rules ---
+# If you'd rather have git pick up new files under certain paths on its
+# own (so you don't have to `git add -f` each new file individually), you
+# can un-ignore specific paths below with "!" lines instead. This needs more
+# upkeep: to un-ignore a nested path, every component of that path must be
+# un-ignored.
 # Example: to track /home/alice/.bashrc you need three lines:
 #   !/home
 #   !/home/alice
@@ -27,18 +32,14 @@
 # file. Your custom rules must appear above that block (put them here).
 # --------------------------------------------------------------------------
 
-# Ignore everything at the root level.
+# The one line that matters: ignore everything at the root level.
 /*
 
-# Un-ignore the paths you want to track. Some common examples:
+# Optional: un-ignore paths you want tracked automatically (see above).
+# Not needed if you're using `git add -f` instead.
 
-# Track all of /etc (the classic etckeeper use case).
 # !/etc
-
-# Track a single file in a home directory.
 # !/home
 # !/home/username
 # !/home/username/.bashrc
-
-# Track boot configuration.
 # !/boot

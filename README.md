@@ -6,55 +6,107 @@ The original source is developed at
 
 ## Changes compared to the original
 
-- **Goal: allow tracking the whole root filesystem (`/`), not just `/etc`.**
-  etckeeper is normally used with `etckeeper init -d /etc`, where the
-  directory is small enough that scanning every file in it on every commit
-  is cheap. This fork also supports running it against the whole filesystem
-  (`etckeeper init -d /`) with a `.gitignore` that ignores everything by
-  default and only tracks the files/directories you explicitly add.
+### Tracking the whole root filesystem (/)
 
-  **The issue before this change:** even with such a `.gitignore` in place,
-  etckeeper still scanned every single file on the entire disk on every
-  commit — including huge or virtual locations like `/proc`, `/sys`, or
-  mounted drives — before throwing away the ones that were ignored. This
-  made using etckeeper on `/` extremely slow (and in some cases effectively
-  unusable, since scanning things like `/proc` can hang or take forever).
+**Goal:** allow tracking the whole root filesystem (`/`), not just `/etc`.
+etckeeper is normally used with `etckeeper init -d /etc`, where the
+directory is small enough that scanning every file in it on every commit
+is cheap. This fork also supports running it against the whole filesystem
+(`etckeeper init -d /`) with a `.gitignore` that ignores everything by
+default and only tracks the files/directories you explicitly add.
 
-  **The fix:** etckeeper now skips ignored directories entirely while
-  scanning, instead of scanning everything first and filtering afterward.
-  As a result, only the files and directories you've actually chosen to
-  track are ever looked at, making it practical to track `/` with a
-  "track only what I explicitly add" `.gitignore`. This only affects the
-  git backend; other version control backends (hg/bzr/darcs) and the
-  standard `/etc`-only use case are unaffected.
+**The issue before this change:** even with such a `.gitignore` in place,
+etckeeper still scanned every single file on the entire disk on every
+commit — including huge or virtual locations like `/proc`, `/sys`, or
+mounted drives — before throwing away the ones that were ignored. This
+made using etckeeper on `/` extremely slow (and in some cases effectively
+unusable, since scanning things like `/proc` can hang or take forever).
 
-  A ready-to-copy sample `.gitignore` for this setup is provided in
-  [`doc/gitignore-for-root-tracking`](doc/gitignore-for-root-tracking).
+**The fix:** etckeeper now skips ignored directories entirely while
+scanning, instead of scanning everything first and filtering afterward.
+As a result, only the files and directories you've actually chosen to
+track are ever looked at, making it practical to track `/` with a
+"track only what I explicitly add" `.gitignore`. This only affects the
+git backend; other version control backends (hg/bzr/darcs) and the
+standard `/etc`-only use case are unaffected.
 
-  To use it:
+**Important:** `-d /` is not remembered between runs — pass it to every
+etckeeper invocation you use for root-filesystem tracking (`etckeeper
+commit -d /`, `etckeeper unclean -d /`, cron entries, etc.), not just
+`init`. Without it, etckeeper defaults to `/etc` and will operate on that
+directory instead (harmless, but produces confusing "not yet enabled for
+/etc" / gitignore warnings if `/etc` itself was never separately
+initialized). Alternatively, set `ETCKEEPER_DIR=/` in
+`/etc/etckeeper/etckeeper.conf` to make `/` the default for all etckeeper
+commands without needing `-d /` each time.
 
-  1. Copy the sample file into place: `cp doc/gitignore-for-root-tracking /.gitignore`
-  2. Edit `/.gitignore` to un-ignore the paths you actually want to track
-     (see the comments in the file for how the `!` negation rules work).
-  3. Run `etckeeper init -d /`.
+### Choosing a .gitignore strategy
 
-  **Alternative approach:** instead of maintaining `!`-negation rules in
-  `/.gitignore`, you can keep `.gitignore` as just the deny-all `/*` line and
-  explicitly track individual paths with `git add -f <path>`. Since
-  `.gitignore` only affects *untracked* files, once a path has been
-  force-added it stays tracked and its changes are picked up by etckeeper's
-  regular commits (`git add --all`) without any further `.gitignore` edits —
-  no need to maintain nested negation rules for each parent directory.
+The easiest approach: keep `/.gitignore` down to a single line, `/*`, which
+ignores everything, and explicitly track individual paths with
+`git add -f <path>`. Since `.gitignore` only affects *untracked* files,
+once a path has been force-added it stays tracked and its changes are
+picked up by etckeeper's regular commits (`git add --all`) without any
+further `.gitignore` edits — no negation rules to maintain at all.
 
-  **Important:** `-d /` is not remembered between runs — pass it to every
-  etckeeper invocation you use for root-filesystem tracking (`etckeeper
-  commit -d /`, `etckeeper unclean -d /`, cron entries, etc.), not just
-  `init`. Without it, etckeeper defaults to `/etc` and will operate on that
-  directory instead (harmless, but produces confusing "not yet enabled for
-  /etc" / gitignore warnings if `/etc` itself was never separately
-  initialized). Alternatively, set `ETCKEEPER_DIR=/` in
-  `/etc/etckeeper/etckeeper.conf` to make `/` the default for all etckeeper
-  commands without needing `-d /` each time.
+If you'd rather have new files under certain paths tracked automatically,
+without running `git add -f` on each one yourself, add `!`-negation rules
+to `/.gitignore` to un-ignore those paths. This needs more upkeep (every
+component of a nested path must be un-ignored), so it's worth using only
+where you specifically want that convenience — see the comments in
+[`doc/gitignore-for-root-tracking`](doc/gitignore-for-root-tracking) for
+how the negation rules work.
+
+A ready-to-copy sample `.gitignore` for this setup is provided in
+[`doc/gitignore-for-root-tracking`](doc/gitignore-for-root-tracking). To
+use it:
+
+1. Copy the sample file into place: `cp doc/gitignore-for-root-tracking /.gitignore`
+2. If you're using `git add -f`, no further edits are needed. Otherwise,
+   edit `/.gitignore` to add `!` negation rules for the paths you want
+   tracked automatically.
+3. Run `etckeeper init -d /`.
+
+### Bootstrapping a new host with root-tracking onto a shared repo
+
+Here's how to bring a brand-new machine online using this fork's
+root-tracking mode (see above), while keeping each host's history on its
+own branch in a repo shared by all your machines.
+
+First, configure `/etc/etckeeper/etckeeper.conf` on the new host so `/` is
+the default directory for every etckeeper command, not just this session's:
+
+	ETCKEEPER_DIR=/
+
+Set up the ignore file as described above — copy
+[`doc/gitignore-for-root-tracking`](doc/gitignore-for-root-tracking) to
+`/.gitignore` and edit its `!` negations for the paths you want tracked (or
+leave it as a plain deny-all and use `git add -f` instead). Then initialise
+the repository and give it its own branch, named after the host, before
+making the first commit:
+
+	cd /
+	etckeeper init -d /
+	git branch -m hosts/$(hostname -s)
+
+Stage whatever you want tracked, check it with `git status`, and make the
+initial commit:
+
+	git add -f etc home/someuser/.ssh
+	git status
+	etckeeper commit "Initial commit"
+
+Finally, connect this branch to the shared repo, using the same kind of
+mode-700 bare repository over ssh shown above for backups, and push:
+
+	git remote add origin ssh://server/etc-root-shared
+	git push -u origin $(git branch --show-current)
+
+To sync later, `git pull` is fine for keeping this host's own branch
+up to date with what's been pushed for it. Don't merge another host's
+`hosts/<other>` branch into yours, though — as with the "several machines"
+case above, fetch it and diff or cherry-pick instead, since another host's
+tracked files, ownership and permissions don't apply to your machine.
 
 ## License
 
@@ -258,48 +310,6 @@ handy backup.
 Of course, it's also possible to pull changes from a server onto client
 machines, to deploy changes to /etc. Once /etc is under version control, the
 sky's the limit..
-
-### Bootstrapping a new host with root-tracking onto a shared repo
-
-Here's how to bring a brand-new machine online using this fork's
-root-tracking mode (see "Changes compared to the original" above), while
-keeping each host's history on its own branch in a repo shared by all your
-machines.
-
-First, configure `/etc/etckeeper/etckeeper.conf` on the new host so `/` is
-the default directory for every etckeeper command, not just this session's:
-
-	ETCKEEPER_DIR=/
-
-Set up the ignore file as described above — copy
-[`doc/gitignore-for-root-tracking`](doc/gitignore-for-root-tracking) to
-`/.gitignore` and edit its `!` negations for the paths you want tracked (or
-leave it as a plain deny-all and use `git add -f` instead). Then initialise
-the repository and give it its own branch, named after the host, before
-making the first commit:
-
-	cd /
-	etckeeper init -d /
-	git branch -m hosts/$(hostname -s)
-
-Stage whatever you want tracked, check it with `git status`, and make the
-initial commit:
-
-	git add -f etc home/someuser/.ssh
-	git status
-	etckeeper commit "Initial commit"
-
-Finally, connect this branch to the shared repo, using the same kind of
-mode-700 bare repository over ssh shown above for backups, and push:
-
-	git remote add origin ssh://server/etc-root-shared
-	git push -u origin $(git branch --show-current)
-
-To sync later, `git pull` is fine for keeping this host's own branch
-up to date with what's been pushed for it. Don't merge another host's
-`hosts/<other>` branch into yours, though — as with the "several machines"
-case above, fetch it and diff or cherry-pick instead, since another host's
-tracked files, ownership and permissions don't apply to your machine.
 
 
 ## Configuration
