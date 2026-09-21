@@ -21,23 +21,37 @@ filter_ignore() {
 			echo "etckeeper warning: can't find tempfile or mktemp" >&2
 			exit 1
 		fi
-		listfile="$($tempfile)"
 		case "$VCS" in
 			darcs)
+				listfile="$($tempfile)"
 				LC_CTYPE=C grep -v '^[[:space:]]*\(#\|$\)' "$ignorefile" > "$listfile" || true
 				LC_CTYPE=C grep -Evf "$listfile"
+				rm -f "$listfile"
+				unset listfile
 				;;
 			git)
-				(git ls-files -oi --exclude-standard; git ls-files -oi --exclude-standard --directory) | sort | uniq > "$listfile" || true
-				if [ -s "$listfile" ]; then
-					sed 's/^\.\///' | LC_CTYPE=C grep -xFvf "$listfile"
-				else
-					cat -
+				candidatefile="$($tempfile)"
+				ignoredfile="$($tempfile)"
+				sed 's/^\.\///' > "$candidatefile"
+				if [ -s "$candidatefile" ]; then
+					# Only test the paths find already discovered (already
+					# pruned of wholly-ignored directories, see
+					# generate_metadata()'s NOVCS loop above) against
+					# .gitignore, instead of asking git to enumerate every
+					# ignored file itself -- the latter forces git to
+					# recurse into huge/virtual trees like /proc or /sys
+					# when tracking /.
+					git check-ignore --stdin < "$candidatefile" > "$ignoredfile" || true
+					if [ -s "$ignoredfile" ]; then
+						LC_CTYPE=C grep -xFvf "$ignoredfile" "$candidatefile"
+					else
+						cat "$candidatefile"
+					fi
 				fi
+				rm -f "$candidatefile" "$ignoredfile"
+				unset candidatefile ignoredfile
 				;;
 		esac
-		rm -f "$listfile"
-		unset listfile
 	else
 		cat -
 	fi

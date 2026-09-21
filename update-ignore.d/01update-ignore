@@ -81,6 +81,16 @@ writefile () {
 	comment "begin section $managed_by_etckeeper (do not edit this section by hand)"
 	nl
 
+	if [ "$VCS" = git ]; then
+		# Un-ignore etckeeper's own tracking files, in case an earlier
+		# deny-all rule (eg for whole-root tracking) would otherwise hide
+		# them from git and break commits.
+		comment "etckeeper needs these tracked regardless of earlier ignore rules"
+		echo "!/.gitignore" >>"$file"
+		echo "!/.etckeeper" >>"$file"
+		nl
+	fi
+
 	if [ "$VCS" = darcs ]; then
 		darcs setpref boringfile .darcsignore
 	fi
